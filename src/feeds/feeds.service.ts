@@ -26,7 +26,6 @@ export class FeedsService {
       httpClient: this.httpclientService,
     });
 
-    await snake.prepare();
     const feedInformation = await snake.buildFeed();
 
     return this.rssBuilderService.build(feedInformation, format);
