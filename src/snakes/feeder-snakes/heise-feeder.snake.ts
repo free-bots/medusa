@@ -6,16 +6,18 @@ export class HeiseFeederSnake extends FillFeederSnake {
   public name = 'Heise';
 
   public async fillFeedItem(feedItem: SnakeFeedItem): Promise<SnakeFeedItem> {
+    const link = HeiseFeederSnake.removeWebTrekk(feedItem.link);
     if (!feedItem.link) {
       return feedItem;
     }
 
     try {
-      const data = await this.utils.httpClient.getAndRetry(feedItem.link);
+      const data = await this.utils.httpClient.getAndRetry(link);
 
       const $ = cheerio.load(data);
 
       feedItem.author = $('meta[name=author]').attr('content');
+      feedItem.link = link;
 
       let $content = $('div.article-content');
 
@@ -36,5 +38,9 @@ export class HeiseFeederSnake extends FillFeederSnake {
 
   public async provideFetchedFeed(): Promise<any> {
     return this.utils.rssFetcher.getFeed('https://www.heise.de/rss/heise-atom.xml');
+  }
+
+  private static removeWebTrekk(url: string): string {
+    return url.substring(0, url.indexOf('?wt_mc='));
   }
 }
