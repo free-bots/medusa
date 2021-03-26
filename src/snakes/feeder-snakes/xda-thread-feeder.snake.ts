@@ -1,4 +1,4 @@
-import { FeederSnake, SnakeFeedInformation, SnakeFeedItem } from '../../snake-factory/models/feeder-snake.model';
+import { FeederSnake, SnakeFeedInformation, SnakeFeedItem, SnakeParam } from '../../snake-factory/models/feeder-snake.model';
 import * as cheerio from 'cheerio';
 import * as moment from 'moment';
 import Root = cheerio.Root;
@@ -9,8 +9,12 @@ export class XdaThreadFeederSnake extends FeederSnake {
 
   private $: Root = null;
 
+  public registerParams(): SnakeParam[] {
+    return [{ name: 'url', description: 'Url of the Xda Forum Thread', type: 'string', defaultValue: null }];
+  }
+
   public async prepare(): Promise<void> {
-    const data = await this.utils.httpClient.get(this.createUrl());
+    const data = await this.context.httpClient.get(this.createUrl());
     this.$ = cheerio.load(data);
   }
 
@@ -25,8 +29,8 @@ export class XdaThreadFeederSnake extends FeederSnake {
     };
   }
 
-  public async provideItems(): Promise<SnakeFeedItem[]> {
-    const items: SnakeFeedItem[] = [];
+  public async provideItems(): Promise<(() => Promise<SnakeFeedItem>)[]> {
+    const items: (() => Promise<SnakeFeedItem>)[] = [];
 
     this.$('div.block-body')
       .find('article.message')
@@ -43,24 +47,26 @@ export class XdaThreadFeederSnake extends FeederSnake {
             XdaThreadFeederSnake.replaceAttachmentUrl($listItem.find('img'), 'src');
           });
 
-        items.push({
-          id: $post.attr('id'),
-          link: $post
-            .find('ul.message-attribution-opposite.message-attribution-opposite--list')
-            .find('a.message-attribution-gadget')
-            .attr('href'),
-          author: $post.find('h4.message-name').text(),
-          content: $content.html(),
-          date: moment(title, 'MMM D, YYYY at H:mm a').toDate(),
-          title: title,
-        });
+        items.push(() =>
+          Promise.resolve({
+            id: $post.attr('id'),
+            link: $post
+              .find('ul.message-attribution-opposite.message-attribution-opposite--list')
+              .find('a.message-attribution-gadget')
+              .attr('href'),
+            author: $post.find('h4.message-name').text(),
+            content: $content.html(),
+            date: moment(title, 'MMM D, YYYY at H:mm a').toDate(),
+            title: title,
+          }),
+        );
       });
 
     return items;
   }
 
   private createUrl(): string {
-    return `${this.params.url}/latest`;
+    return `${this.getParam<string>('url')}/latest`;
   }
 
   private static replaceAttachmentUrl($element: Cheerio, attribute: string) {

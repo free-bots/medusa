@@ -1,43 +1,45 @@
 import { FillFeederSnake } from '../../snake-factory/models/fill-feeder-snake.model';
-import { SnakeFeedItem } from '../../snake-factory/models/feeder-snake.model';
+import { SnakeFeedItem, SnakeParam } from '../../snake-factory/models/feeder-snake.model';
 import * as cheerio from 'cheerio';
 
 export class HeiseFeederSnake extends FillFeederSnake {
   public name = 'Heise';
 
-  public async fillFeedItem(feedItem: SnakeFeedItem): Promise<SnakeFeedItem> {
-    const link = HeiseFeederSnake.removeWebTrekk(feedItem.link);
-    if (!feedItem.link) {
-      return feedItem;
-    }
+  public registerParams(): SnakeParam[] {
+    return [];
+  }
 
-    try {
-      const data = await this.utils.httpClient.getAndRetry(link);
+  public fillFeedItem(feedItem: SnakeFeedItem): () => Promise<SnakeFeedItem> {
+    return () =>
+      new Promise<SnakeFeedItem>(async (resolve) => {
+        const link = HeiseFeederSnake.removeWebTrekk(feedItem.link);
+        if (!feedItem.link) {
+          return resolve(feedItem);
+        }
 
-      const $ = cheerio.load(data);
+        const data = await this.context.httpClient.getAndRetry(link);
+        const $ = cheerio.load(data);
 
-      feedItem.author = $('meta[name=author]').attr('content');
-      feedItem.link = link;
+        feedItem.author = $('meta[name=author]').attr('content');
+        feedItem.link = link;
 
-      let $content = $('div.article-content');
+        let $content = $('div.article-content');
 
-      if (!$content.length) {
-        $content = $('#article_content');
-      }
+        if (!$content.length) {
+          $content = $('#article_content');
+        }
 
-      feedItem.content = '';
-      $content.find('p, h3, ul, table, pre, img').each((index, element) => {
-        feedItem.content += $(element).html();
+        feedItem.content = '';
+        $content.find('p, h3, ul, table, pre, img').each((index, element) => {
+          feedItem.content += $(element).html();
+        });
+
+        resolve(feedItem);
       });
-    } catch (e) {
-      console.log(e);
-    }
-
-    return feedItem;
   }
 
   public async provideFetchedFeed(): Promise<any> {
-    return this.utils.rssFetcher.getFeed('https://www.heise.de/rss/heise-atom.xml');
+    return this.context.rssFetcher.getFeed('https://www.heise.de/rss/heise-atom.xml');
   }
 
   private static removeWebTrekk(url: string): string {

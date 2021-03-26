@@ -4,7 +4,7 @@ export abstract class FillFeederSnake extends FeederSnake {
   private feedInformation: SnakeFeedInformation;
   private feedItems: SnakeFeedItem[];
 
-  abstract fillFeedItem(feedItem: SnakeFeedItem): Promise<SnakeFeedItem>;
+  abstract fillFeedItem(feedItem: SnakeFeedItem): () => Promise<SnakeFeedItem>;
 
   abstract provideFetchedFeed(): Promise<any>;
 
@@ -38,7 +38,7 @@ export abstract class FillFeederSnake extends FeederSnake {
     return Promise.resolve(this.feedInformation);
   }
 
-  public provideItems(): Promise<SnakeFeedItem[]> {
-    return Promise.all(this.feedItems.map((item) => this.fillFeedItem(item)));
+  public async provideItems(): Promise<(() => Promise<SnakeFeedItem>)[]> {
+    return this.feedItems.map((item) => this.fillFeedItem(item));
   }
 }

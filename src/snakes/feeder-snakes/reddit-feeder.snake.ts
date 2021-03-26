@@ -1,4 +1,4 @@
-import { FeederSnake, SnakeFeedInformation, SnakeFeedItem } from '../../snake-factory/models/feeder-snake.model';
+import { FeederSnake, SnakeFeedInformation, SnakeFeedItem, SnakeParam } from '../../snake-factory/models/feeder-snake.model';
 import { buildImage, buildLink } from '../../common/html-tag-builder';
 
 export class RedditFeederSnake extends FeederSnake {
@@ -8,10 +8,17 @@ export class RedditFeederSnake extends FeederSnake {
   private url = '';
   private baseUrl = 'https://www.reddit.com';
 
+  public registerParams(): SnakeParam[] {
+    return [
+      { name: 'name', description: 'Name of the subreddit for type r or the username for type u', type: 'string', defaultValue: null },
+      { name: 'type', description: 'Use r for a subreddit or u for an user', type: 'string', defaultValue: 'r' },
+    ];
+  }
+
   public async prepare(): Promise<void> {
     try {
-      this.url = `${this.baseUrl}/${this.params.type === 'r' ? 'r/' : 'user/'}${this.params.name}`;
-      this.response = await this.utils.httpClient.get(`${this.url}.json`);
+      this.url = `${this.baseUrl}/${this.getParam<string>('type') === 'r' ? 'r/' : 'user/'}${this.getParam<string>('name')}`;
+      this.response = await this.context.httpClient.get(`${this.url}.json`);
     } catch (e) {
       console.error(e);
     }
@@ -29,19 +36,20 @@ export class RedditFeederSnake extends FeederSnake {
     };
   }
 
-  public async provideItems(): Promise<SnakeFeedItem[]> {
+  public async provideItems(): Promise<(() => Promise<SnakeFeedItem>)[]> {
     return this.response.data.children
       .filter((post) => post.kind !== 't1')
       .map((post) => {
         const data = post.data;
-        return {
-          title: data.title,
-          id: data.id,
-          link: this.getEncodePermalink(data.permalink),
-          content: this.getContent(data),
-          author: data.author,
-          date: new Date(post.created_utc || null),
-        } as SnakeFeedItem;
+        return () =>
+          Promise.resolve({
+            title: data.title,
+            id: data.id,
+            link: this.getEncodePermalink(data.permalink),
+            content: this.getContent(data),
+            author: data.author,
+            date: new Date(post.created_utc || null),
+          } as SnakeFeedItem);
       });
   }
 

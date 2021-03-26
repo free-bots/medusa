@@ -1,4 +1,4 @@
-import { FeederSnake, SnakeFeedInformation, SnakeFeedItem } from '../../snake-factory/models/feeder-snake.model';
+import { FeederSnake, SnakeFeedInformation, SnakeFeedItem, SnakeParam } from '../../snake-factory/models/feeder-snake.model';
 import * as cheerio from 'cheerio';
 import { buildImage } from '../../common/html-tag-builder';
 
@@ -6,6 +6,10 @@ export class PlingFeederSnake extends FeederSnake {
   public name = 'Pling';
 
   private url = 'https://www.pling.com';
+
+  public registerParams(): SnakeParam[] {
+    throw [];
+  }
 
   public prepare(): Promise<void> {
     return Promise.resolve(undefined);
@@ -21,10 +25,10 @@ export class PlingFeederSnake extends FeederSnake {
     };
   }
 
-  public async provideItems(): Promise<SnakeFeedItem[]> {
-    const items: SnakeFeedItem[] = [];
+  public async provideItems(): Promise<(() => Promise<SnakeFeedItem>)[]> {
+    const items: (() => Promise<SnakeFeedItem>)[] = [];
 
-    const response = await this.utils.httpClient.get(this.createQueryUrl());
+    const response = await this.context.httpClient.get(this.createQueryUrl());
 
     const $ = cheerio.load(response);
     $('.explore-product').each((index, element) => {
@@ -34,14 +38,16 @@ export class PlingFeederSnake extends FeederSnake {
       const $title = $details.find('a');
       const id = $title.attr('href');
 
-      items.push({
-        author: $details.find('div.title').find('b.username').find('a').text().trim(),
-        content: PlingFeederSnake.createContent($icon.attr('src'), $details.find('div.productInfo').text()),
-        date: new Date(),
-        id: id,
-        link: `${this.url}${id}`,
-        title: $title.text(),
-      });
+      items.push(() =>
+        Promise.resolve({
+          author: $details.find('div.title').find('b.username').find('a').text().trim(),
+          content: PlingFeederSnake.createContent($icon.attr('src'), $details.find('div.productInfo').text()),
+          date: new Date(),
+          id: id,
+          link: `${this.url}${id}`,
+          title: $title.text(),
+        }),
+      );
     });
 
     return items;

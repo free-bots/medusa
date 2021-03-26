@@ -1,10 +1,28 @@
-import { FeederSnake, SnakeFeedInformation, SnakeFeedItem } from '../../snake-factory/models/feeder-snake.model';
+import {
+  DefaultParamName,
+  FeederSnake,
+  SnakeFeedInformation,
+  SnakeFeedItem,
+  SnakeParam,
+} from '../../snake-factory/models/feeder-snake.model';
 import { buildImage, buildLink } from '../../common/html-tag-builder';
 
 export class GnomeExtensionsFeederSnake extends FeederSnake {
   public name = 'GnomeExtensions';
 
   private url = 'https://extensions.gnome.org';
+
+  public registerParams(): SnakeParam[] {
+    return [
+      { name: 'pageCount', description: 'Number of pages to fetch', type: 'number', defaultValue: 10 },
+      {
+        name: 'sort',
+        description: 'Sort type like name, recent, downloads or popularity',
+        type: 'string',
+        defaultValue: 'recent',
+      },
+    ];
+  }
 
   public prepare(): Promise<void> {
     return Promise.resolve(undefined);
@@ -20,34 +38,25 @@ export class GnomeExtensionsFeederSnake extends FeederSnake {
     };
   }
 
-  public async provideItems(): Promise<SnakeFeedItem[]> {
-    const items: SnakeFeedItem[] = [];
-    const pages = this.params.pageCount || 10;
+  public async provideItems(): Promise<(() => Promise<SnakeFeedItem>)[]> {
+    const pages = this.getParam<number>('pageCount');
 
-    let totalPages = 0;
-    let availablePages = -1;
+    const firstPage = await this.getPage(1);
 
-    for (let i = 1; i <= pages; i++) {
-      if (availablePages !== -1 && availablePages <= totalPages) {
-        continue;
+    const items: (() => Promise<SnakeFeedItem>)[] = [...this.mapToItemFunction(this.createItems(firstPage.extensions))];
+
+    if (items.length >= this.getParam<number>(DefaultParamName.MAX_ITEMS)) {
+      return items;
+    }
+
+    const maxPages = Math.min(firstPage.pageAmount, pages);
+    for (let i = 2; i <= maxPages; i++) {
+      const data = await this.getPage(i);
+      items.push(...this.mapToItemFunction(this.createItems(data.extensions)));
+
+      if (items.length >= this.getParam<number>(DefaultParamName.MAX_ITEMS)) {
+        return items;
       }
-
-      const extensions = await this.utils.httpClient.get(this.createQueryUrl(i)).then((data) => {
-        const extensions = data.extensions;
-        availablePages = extensions.numpages;
-        return extensions.map((extension) => ({
-          title: extension.name,
-          id: extension.uuid,
-          link: extension.link,
-          content: this.createContent(extension),
-          author: extension.creator,
-          date: new Date(),
-        }));
-      });
-
-      items.push(...extensions);
-
-      totalPages++;
     }
 
     return items;
@@ -58,7 +67,7 @@ export class GnomeExtensionsFeederSnake extends FeederSnake {
   }
 
   private createSortParam(): string {
-    return ['name', 'recent', 'downloads', 'popularity'].find((item) => item === (this.params.sort || 'recent'));
+    return ['name', 'recent', 'downloads', 'popularity'].find((item) => item === this.getParam<string>('sort'));
   }
 
   private createQueryUrl(pageNumber): string {
@@ -77,5 +86,27 @@ export class GnomeExtensionsFeederSnake extends FeederSnake {
         (screenshot ? buildImage(this.createUri(screenshot)) : '') +
         `<p>${description.replace(/(?:\r\n|\r|\n)/g, '<br>')}</p>`,
     );
+  }
+
+  private async getPage(pageNumber: number): Promise<{ extensions: any[]; pageAmount: number; current: number }> {
+    return this.context.httpClient.get(this.createQueryUrl(pageNumber)).then((data) => {
+      const extensions = data.extensions;
+      return { extensions: extensions, pageAmount: data.numpages, current: data.total };
+    });
+  }
+
+  private createItems(extensions: any): SnakeFeedItem[] {
+    return extensions.map((extension) => ({
+      title: extension.name,
+      id: extension.uuid,
+      link: extension.link,
+      content: this.createContent(extension),
+      author: extension.creator,
+      date: new Date(),
+    }));
+  }
+
+  private mapToItemFunction(extensionItems: any[]): (() => Promise<SnakeFeedItem>)[] {
+    return extensionItems.map((extensionItem) => () => Promise.resolve(extensionItem));
   }
 }

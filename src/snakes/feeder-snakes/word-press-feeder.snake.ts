@@ -1,36 +1,43 @@
 import { FillFeederSnake } from '../../snake-factory/models/fill-feeder-snake.model';
-import { SnakeFeedItem } from '../../snake-factory/models/feeder-snake.model';
+import { SnakeFeedItem, SnakeParam } from '../../snake-factory/models/feeder-snake.model';
 import * as cheerio from 'cheerio';
 
 export class WordPressFeederSnake extends FillFeederSnake {
   public name = 'WordPress';
 
-  public async fillFeedItem(feedItem: SnakeFeedItem): Promise<SnakeFeedItem> {
-    if (feedItem?.link) {
-      try {
-        const data = await this.utils.httpClient.get(feedItem.link);
-        const $ = cheerio.load(data);
-        const $article = ['[itemprop=articleBody]', 'article', '.single-content', '.post-content', '.post']
-          .map((query) => $(query))
-          .find((query) => query.length);
+  public registerParams(): SnakeParam[] {
+    return [{ name: 'url', description: 'Url of the Wordpress blog', defaultValue: null, type: 'string' }];
+  }
 
-        if ($article?.length) {
-          ['script', 'form', 'div.wpa'].forEach((query) => $article.find(query).remove());
-          feedItem.content = $article.text();
+  public fillFeedItem(feedItem: SnakeFeedItem): () => Promise<SnakeFeedItem> {
+    return () =>
+      new Promise<SnakeFeedItem>(async (resolve) => {
+        if (feedItem?.link) {
+          try {
+            const data = await this.context.httpClient.get(feedItem.link);
+            const $ = cheerio.load(data);
+            const $article = ['[itemprop=articleBody]', 'article', '.single-content', '.post-content', '.post']
+              .map((query) => $(query))
+              .find((query) => query.length);
+
+            if ($article?.length) {
+              ['script', 'form', 'div.wpa'].forEach((query) => $article.find(query).remove());
+              feedItem.content = $article.text();
+            }
+          } catch (e) {
+            console.log(e);
+          }
         }
-      } catch (e) {
-        console.log(e);
-      }
-    }
 
-    return Promise.resolve(feedItem);
+        resolve(feedItem);
+      });
   }
 
   public provideFetchedFeed(): Promise<any> {
-    const baseUrl = this.params.url;
-    return this.utils.rssFetcher.getFeed(`${baseUrl}/feed/atom/`).catch((reason) => {
+    const baseUrl = this.getParam<string>('url');
+    return this.context.rssFetcher.getFeed(`${baseUrl}/feed/atom/`).catch((reason) => {
       console.error(reason);
-      return this.utils.rssFetcher.getFeed(`${baseUrl}/?feed=atom`);
+      return this.context.rssFetcher.getFeed(`${baseUrl}/?feed=atom`);
     });
   }
 }
