@@ -5,7 +5,7 @@ import {
   SnakeFeedItem,
   SnakeParam,
 } from '../../snake-factory/models/feeder-snake.model';
-import { buildImage, buildLink } from '../../common/html-tag-builder';
+import { buildImage, buildLink, newLineToBr } from '../../common/html-tag-builder';
 
 export class GnomeExtensionsFeederSnake extends FeederSnake {
   public name = 'GnomeExtensions';
@@ -25,6 +25,10 @@ export class GnomeExtensionsFeederSnake extends FeederSnake {
   }
 
   public prepare(): Promise<void> {
+    return Promise.resolve(undefined);
+  }
+
+  public cleanUp(): Promise<void> {
     return Promise.resolve(undefined);
   }
 
@@ -84,7 +88,7 @@ export class GnomeExtensionsFeederSnake extends FeederSnake {
       this.createUri(uri),
       (icon ? buildImage(this.createUri(icon)) : '') +
         (screenshot ? buildImage(this.createUri(screenshot)) : '') +
-        `<p>${description.replace(/(?:\r\n|\r|\n)/g, '<br>')}</p>`,
+        `<p>${newLineToBr(description)}</p>`,
     );
   }
 

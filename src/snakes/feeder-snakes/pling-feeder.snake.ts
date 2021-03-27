@@ -15,6 +15,10 @@ export class PlingFeederSnake extends FeederSnake {
     return Promise.resolve(undefined);
   }
 
+  public cleanUp(): Promise<void> {
+    return Promise.resolve(undefined);
+  }
+
   public async provideFeedInformation(): Promise<SnakeFeedInformation> {
     return {
       description: 'Displays current Gnome themes',

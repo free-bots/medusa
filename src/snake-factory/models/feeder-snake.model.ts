@@ -50,6 +50,8 @@ export abstract class FeederSnake extends Snake {
 
   abstract provideItems(): Promise<(() => Promise<SnakeFeedItem>)[]>;
 
+  abstract cleanUp(): Promise<void>;
+
   protected getParam<T>(name: string): T {
     const param = this.registeredParams.find((param) => param.name === name);
     if (!param) {
@@ -75,8 +77,11 @@ export abstract class FeederSnake extends Snake {
     }
     this.prepareParams();
     await this.prepare();
+
     const feedInformation = await this.provideFeedInformation();
     const feeds = await this.getFeedItems();
+
+    await this.cleanUp();
 
     return { ...feedInformation, items: feeds };
   }

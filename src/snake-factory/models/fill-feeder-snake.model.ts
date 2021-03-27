@@ -34,6 +34,12 @@ export abstract class FillFeederSnake extends FeederSnake {
     return Promise.resolve(undefined);
   }
 
+  public cleanUp(): Promise<void> {
+    this.feedInformation = null;
+    this.feedItems = [];
+    return Promise.resolve(undefined);
+  }
+
   public provideFeedInformation(): Promise<SnakeFeedInformation> {
     return Promise.resolve(this.feedInformation);
   }

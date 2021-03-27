@@ -18,6 +18,10 @@ export class XdaThreadFeederSnake extends FeederSnake {
     this.$ = cheerio.load(data);
   }
 
+  public cleanUp(): Promise<void> {
+    return Promise.resolve(undefined);
+  }
+
   public async provideFeedInformation(): Promise<SnakeFeedInformation> {
     const title = this.$('h1.p-title-value').text();
     return {

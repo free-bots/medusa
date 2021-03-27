@@ -26,6 +26,11 @@ export class RedditFeederSnake extends FeederSnake {
     return Promise.resolve(undefined);
   }
 
+  public cleanUp(): Promise<void> {
+    this.response = null;
+    return Promise.resolve(undefined);
+  }
+
   public async provideFeedInformation(): Promise<SnakeFeedInformation> {
     return {
       description: 'Reddit',
