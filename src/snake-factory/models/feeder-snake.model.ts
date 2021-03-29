@@ -4,20 +4,20 @@ import { FeedInformation } from '../../common/models/feed-information.model';
 import { HttpclientService } from '../../common/httpclient/httpclient.service';
 
 export class SnakeFeedInformation {
-  title: string;
-  link: string;
-  description?: string;
-  image?: string;
-  favicon?: string;
+  public title: string;
+  public link: string;
+  public description?: string;
+  public image?: string;
+  public favicon?: string;
 }
 
 export class SnakeFeedItem {
-  title: string;
-  id: string;
-  link: string;
-  content: string;
-  author: string;
-  date: Date;
+  public title: string;
+  public id: string;
+  public link: string;
+  public content: string;
+  public author: string;
+  public date: Date;
 }
 
 export class SnakeParam {

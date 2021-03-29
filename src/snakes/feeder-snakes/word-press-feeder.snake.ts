@@ -25,7 +25,7 @@ export class WordPressFeederSnake extends FillFeederSnake {
               feedItem.content = $article.text();
             }
           } catch (e) {
-            console.log(e);
+            this.logger.error(e);
           }
         }
 
@@ -36,7 +36,7 @@ export class WordPressFeederSnake extends FillFeederSnake {
   public provideFetchedFeed(): Promise<any> {
     const baseUrl = this.getParam<string>('url');
     return this.context.rssFetcher.getFeed(`${baseUrl}/feed/atom/`).catch((reason) => {
-      console.error(reason);
+      this.logger.error(reason);
       return this.context.rssFetcher.getFeed(`${baseUrl}/?feed=atom`);
     });
   }

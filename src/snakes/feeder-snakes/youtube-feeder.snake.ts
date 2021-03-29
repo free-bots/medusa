@@ -226,7 +226,7 @@ export class YoutubeFeederSnake extends FeederSnake {
         this.addItem(videoId, useTitle, data?.author || useAuthor, data?.description || useDescription, data?.date);
       }
     } catch (e) {
-      console.log(e);
+      this.logger.error(e);
     }
   }
 

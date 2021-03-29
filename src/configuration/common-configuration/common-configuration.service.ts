@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 export class CommonConfiguration {
-  port: number;
+  public port: number;
 }
 
 @Injectable()

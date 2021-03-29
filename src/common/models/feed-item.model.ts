@@ -1,8 +1,8 @@
 export class FeedItem {
-  title: string;
-  id: string;
-  link: string;
-  content: string;
-  author: string;
-  date: Date;
+  public title: string;
+  public id: string;
+  public link: string;
+  public content: string;
+  public author: string;
+  public date: Date;
 }

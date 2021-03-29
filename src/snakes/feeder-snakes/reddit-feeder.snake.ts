@@ -20,7 +20,7 @@ export class RedditFeederSnake extends FeederSnake {
       this.url = `${this.baseUrl}/${this.getParam<string>('type') === 'r' ? 'r/' : 'user/'}${this.getParam<string>('name')}`;
       this.response = await this.context.httpClient.get(`${this.url}.json`);
     } catch (e) {
-      console.error(e);
+      this.logger.error(e);
     }
 
     return Promise.resolve(undefined);

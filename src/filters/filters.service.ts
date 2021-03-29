@@ -4,14 +4,17 @@ import { RssFetcherService } from '../common/rss-fetcher/rss-fetcher.service';
 import { RssBuilderService } from '../common/rss-builder/rss-builder.service';
 import { FeedItem } from '../snake-factory/models/filter-snake.model';
 import { RequestedFeedFormat } from '../common/RequestedFeedFormat';
+import { BaseLoggingContextService } from '../common/services/base-logging-context.service';
 
 @Injectable()
-export class FiltersService {
+export class FiltersService extends BaseLoggingContextService {
   constructor(
     private readonly snakeFactoryService: SnakeFactoryService,
     private readonly rssFetcherService: RssFetcherService,
     private rssBuilderService: RssBuilderService,
-  ) {}
+  ) {
+    super();
+  }
 
   public async applyFilterById(id: string, params: any, format?: RequestedFeedFormat): Promise<string> {
     const { url } = params;
@@ -67,7 +70,7 @@ export class FiltersService {
         format,
       )
       .catch((reason) => {
-        console.log(reason);
+        this.logger.error(reason);
         throw new BadRequestException();
       });
   }

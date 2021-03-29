@@ -5,22 +5,23 @@ import * as glob from 'glob';
 import { join, resolve } from 'path';
 import { Snake } from './models/snake.model';
 import { SnakeType } from './models/snake-type.model';
+import { BaseLoggingContextService } from '../common/services/base-logging-context.service';
 
 @Injectable()
-export class SnakeFactoryService implements OnModuleInit {
-  get feederSnakes(): FeederSnake[] {
+export class SnakeFactoryService extends BaseLoggingContextService implements OnModuleInit {
+  public get feederSnakes(): FeederSnake[] {
     return this._feederSnakes;
   }
-  get filterSnakes(): FilterSnake[] {
+  public get filterSnakes(): FilterSnake[] {
     return this._filterSnakes;
   }
   private _filterSnakes: FilterSnake[] = [];
   private _feederSnakes: FeederSnake[] = [];
 
   public async onModuleInit(): Promise<void> {
-    console.log('init snake factory...');
+    this.logger.log('init snake factory...');
     await this.loadSnakes();
-    console.log('snakes loaded...');
+    this.logger.log('snakes loaded...');
   }
 
   private async loadSnakes(): Promise<void> {
@@ -30,12 +31,12 @@ export class SnakeFactoryService implements OnModuleInit {
 
   private async loadFilterSnakes(): Promise<void> {
     this._filterSnakes = await this.baitTheSnakesOfType<FilterSnake>(SnakeType.FILTER);
-    console.log(`loaded ${this._filterSnakes.length} filter-snakes`);
+    this.logger.log(`loaded ${this._filterSnakes.length} filter-snakes`);
   }
 
   private async loadFeederSnakes(): Promise<void> {
     this._feederSnakes = await this.baitTheSnakesOfType<FeederSnake>(SnakeType.FEEDER);
-    console.log(`loaded ${this._feederSnakes.length} feeder-snakes`);
+    this.logger.log(`loaded ${this._feederSnakes.length} feeder-snakes`);
   }
 
   private async baitTheSnakesOfType<T extends Snake>(type: SnakeType): Promise<T[]> {
@@ -47,7 +48,7 @@ export class SnakeFactoryService implements OnModuleInit {
             const snake = this.findClass(snakeEgg);
             return SnakeFactoryService.createInstance<T>(snake);
           })
-          .catch((reason) => console.error(reason)) as any,
+          .catch((reason) => this.logger.error(reason)) as any,
     ) as Promise<T>[];
     const snakes = await Promise.all(snakePromises);
     return SnakeFactoryService.filterInvalidSnakes<T>(snakes);

@@ -1,10 +1,10 @@
 import { FeedItem } from './feed-item.model';
 
 export class FeedInformation {
-  title: string;
-  link: string;
-  description?: string;
-  image?: string;
-  favicon?: string;
-  items: FeedItem[];
+  public title: string;
+  public link: string;
+  public description?: string;
+  public image?: string;
+  public favicon?: string;
+  public items: FeedItem[];
 }

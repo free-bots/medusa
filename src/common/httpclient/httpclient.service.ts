@@ -1,8 +1,11 @@
 import { HttpService, Injectable } from '@nestjs/common';
+import { BaseLoggingContextService } from '../services/base-logging-context.service';
 
 @Injectable()
-export class HttpclientService {
-  constructor(private readonly httpService: HttpService) {}
+export class HttpclientService extends BaseLoggingContextService {
+  constructor(private readonly httpService: HttpService) {
+    super();
+  }
 
   public get(url: string): Promise<any> {
     return this.httpService
@@ -17,7 +20,7 @@ export class HttpclientService {
     }
 
     return this.get(url).catch((reason) => {
-      console.log(reason);
+      this.logger.log(reason);
 
       return new Promise(async (resolve) => {
         setTimeout(() => {
