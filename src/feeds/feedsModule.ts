@@ -5,10 +5,11 @@ import { SnakeFactoryModule } from '../snake-factory/snake-factory.module';
 import { RssBuilderModule } from '../common/rss-builder/rss-builder.module';
 import { RssFetcherModule } from '../common/rss-fetcher/rss-fetcher.module';
 import { HttpclientModule } from '../common/httpclient/httpclient.module';
+import { CacheModule } from '../common/cache/cache.module';
 
 @Module({
   providers: [FeedsService],
   controllers: [FeedsController],
-  imports: [SnakeFactoryModule, RssBuilderModule, RssFetcherModule, HttpclientModule],
+  imports: [SnakeFactoryModule, RssBuilderModule, RssFetcherModule, HttpclientModule, CacheModule],
 })
 export class FeedsModule {}
