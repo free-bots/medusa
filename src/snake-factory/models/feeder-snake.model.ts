@@ -72,18 +72,27 @@ export abstract class FeederSnake extends Snake {
   }
 
   public async buildFeed(): Promise<FeedInformation> {
+    try {
+      this.checkInjection();
+      this.prepareParams();
+      await this.prepare();
+
+      const feedInformation = await this.provideFeedInformation();
+      const feeds = await this.getFeedItems();
+
+      await this.cleanUp();
+
+      return { ...feedInformation, items: feeds };
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+
+  private checkInjection() {
     if (!this.isInjected) {
       throw new Error('IllegalStateException inject before build feeds!');
     }
-    this.prepareParams();
-    await this.prepare();
-
-    const feedInformation = await this.provideFeedInformation();
-    const feeds = await this.getFeedItems();
-
-    await this.cleanUp();
-
-    return { ...feedInformation, items: feeds };
   }
 
   private async getFeedItems(): Promise<SnakeFeedItem[]> {
