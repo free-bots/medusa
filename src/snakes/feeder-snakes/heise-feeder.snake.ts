@@ -12,7 +12,7 @@ export class HeiseFeederSnake extends FillFeederSnake {
   public fillFeedItem(feedItem: SnakeFeedItem): () => Promise<SnakeFeedItem> {
     return () =>
       new Promise<SnakeFeedItem>(async (resolve) => {
-        const link = HeiseFeederSnake.removeWebTrekk(feedItem.link);
+        const link = `${HeiseFeederSnake.removeWebTrekk(feedItem.link)}?seite=all`;
         if (!feedItem.link) {
           return resolve(feedItem);
         }
