@@ -1,10 +1,10 @@
-import { FeederSnake, SnakeFeedInformation, SnakeFeedItem } from './feeder-snake.model';
+import { FeederSnake, ProvidedFeedItem, SnakeFeedInformation, SnakeFeedItem } from './feeder-snake.model';
 
 export abstract class FillFeederSnake extends FeederSnake {
   private feedInformation: SnakeFeedInformation;
   private feedItems: SnakeFeedItem[];
 
-  abstract fillFeedItem(feedItem: SnakeFeedItem): () => Promise<SnakeFeedItem>;
+  abstract fillFeedItem(feedItem: ProvidedFeedItem): () => Promise<SnakeFeedItem>;
 
   abstract provideFetchedFeed(): Promise<any>;
 
@@ -26,9 +26,10 @@ export abstract class FillFeederSnake extends FeederSnake {
           id: item.guid,
           link: item.link,
           content: item.content,
+          contentEncoded: item['content:encoded'],
           author: item.creator,
           date: new Date(item.isoDate || null),
-        } as SnakeFeedItem),
+        } as ProvidedFeedItem),
     );
 
     return Promise.resolve(undefined);

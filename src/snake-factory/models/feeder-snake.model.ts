@@ -20,6 +20,10 @@ export class SnakeFeedItem {
   public date: Date;
 }
 
+export class ProvidedFeedItem extends SnakeFeedItem {
+  public 'contentEncoded'?: string;
+}
+
 export class SnakeParam {
   public name: string;
   public description: string;
