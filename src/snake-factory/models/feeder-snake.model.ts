@@ -2,6 +2,7 @@ import { Snake } from './snake.model';
 import { RssFetcherService } from '../../common/rss-fetcher/rss-fetcher.service';
 import { FeedInformation } from '../../common/models/feed-information.model';
 import { HttpclientService } from '../../common/httpclient/httpclient.service';
+import { Aria2DownloadHelperService } from '../../aria2/aria2-download-helper/aria2-download-helper.service';
 
 export class SnakeFeedInformation {
   public title: string;
@@ -38,6 +39,7 @@ export enum DefaultParamName {
 export class SnakeFeederContext {
   public rssFetcher: RssFetcherService;
   public httpClient: HttpclientService;
+  public aria2: Aria2DownloadHelperService;
 }
 
 export abstract class FeederSnake extends Snake {

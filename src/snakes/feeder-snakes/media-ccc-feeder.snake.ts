@@ -1,6 +1,7 @@
 import { FillFeederSnake } from '../../snake-factory/models/fill-feeder-snake.model';
 import { ProvidedFeedItem, SnakeFeedItem, SnakeParam } from '../../snake-factory/models/feeder-snake.model';
 import * as cheerio from 'cheerio';
+import { buildLink } from '../../common/html-tag-builder';
 
 export class MediaCccFeederSnake extends FillFeederSnake {
   public name = 'MediaCCC';
@@ -23,7 +24,14 @@ export class MediaCccFeederSnake extends FillFeederSnake {
   }
 
   public registerParams(): SnakeParam[] {
-    return [];
+    return [
+      {
+        name: 'aria2',
+        defaultValue: true,
+        description: 'Add download links triggered by the server for aria2 in the content of this feed',
+        type: 'boolean',
+      },
+    ];
   }
 
   private async createContent(url: string, encodedContent: string): Promise<string> {
@@ -46,6 +54,12 @@ export class MediaCccFeederSnake extends FillFeederSnake {
       $tabPane.find('div.btn-wrap').each((index1, element1) => {
         const $videoItem = $(element1);
         $content('ul#direct-download').append(`<li><p>${videoType}</p>${$videoItem.html()}</li>`);
+        if (this.getParam<boolean>('aria2')) {
+          const href = $videoItem.find('a').attr('href');
+          $content('ul#direct-download').append(
+            `<li>${buildLink(this.context.aria2.createDownloadUrl(href), `<p>Aria2 Download ${videoType}</p>`)}</li>`,
+          );
+        }
       });
     });
 
@@ -53,6 +67,10 @@ export class MediaCccFeederSnake extends FillFeederSnake {
     $audio.find('div.btn-wrap').each((index, element) => {
       const $audioItem = $(element);
       $content('ul#direct-download').append(`<li>${$audioItem.html()}</li>`);
+      if (this.getParam<boolean>('aria2')) {
+        const href = $audioItem.find('a').attr('href');
+        $content('ul#direct-download').append(`<li>${buildLink(this.context.aria2.createDownloadUrl(href), `<p>Aria2 Download</p>`)}</li>`);
+      }
     });
 
     return $content.html();

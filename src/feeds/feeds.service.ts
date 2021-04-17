@@ -3,18 +3,16 @@ import { SnakeFactoryService } from '../snake-factory/snake-factory.service';
 import { FeederSnake } from '../snake-factory/models/feeder-snake.model';
 import { RssBuilderService } from '../common/rss-builder/rss-builder.service';
 import { RequestedFeedFormat } from '../common/RequestedFeedFormat';
-import { RssFetcherService } from '../common/rss-fetcher/rss-fetcher.service';
-import { HttpclientService } from '../common/httpclient/httpclient.service';
 import { CacheService } from '../common/cache/cache.service';
 import { BaseLoggingContextService } from '../common/services/base-logging-context.service';
+import { ContextBuilderService } from './context-builder/context-builder.service';
 
 @Injectable()
 export class FeedsService extends BaseLoggingContextService {
   constructor(
     private readonly snakeFactoryService: SnakeFactoryService,
     private readonly rssBuilderService: RssBuilderService,
-    private readonly rssFetcherService: RssFetcherService,
-    private readonly httpclientService: HttpclientService,
+    private readonly contextBuilderService: ContextBuilderService,
     private readonly cacheService: CacheService,
   ) {
     super();
@@ -32,10 +30,7 @@ export class FeedsService extends BaseLoggingContextService {
       throw new NotFoundException();
     }
 
-    snake.inject(params, {
-      rssFetcher: this.rssFetcherService,
-      httpClient: this.httpclientService,
-    });
+    snake.inject(params, this.contextBuilderService.buildContext());
 
     const feedInformation = await snake.buildFeed();
     const response = await this.rssBuilderService.build(feedInformation, format);
